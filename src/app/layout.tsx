@@ -2,20 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ViraTopo — compre o topo",
-  description: "O ranking competitivo para produtos digitais brasileiros.",
+  title: "ViraTopo — a edição onde produtos disputam espaço",
+  description: "Uma edição pública para produtos independentes. Sem métricas inventadas.",
   keywords: ["ranking", "produtos digitais", "pix", "saas", "brasil"],
-  openGraph: {
-    title: "ViraTopo — compre o topo",
-    description: "Seu produto sobe. Até alguém cobrir.",
-    type: "website",
-  },
+  openGraph: { title: "ViraTopo — a edição onde produtos disputam espaço", description: "Uma edição pública para produtos independentes. Sem métricas inventadas.", type: "website" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="pt-BR">
-      <body>{children}</body>
-    </html>
-  );
+  return <html lang="pt-BR"><body>{children}</body></html>;
 }
