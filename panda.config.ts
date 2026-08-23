@@ -10,11 +10,11 @@ export default defineConfig({
     extend: {
       tokens: {
         colors: {
-          paper: { value: "#F7F2E9" },
-          ink: { value: "#13202A" },
-          ember: { value: "#C94B2C" },
-          fog: { value: "#E7E0D5" },
-          rule: { value: "#C9C0B2" },
+          paper: { value: "#FAF9F6" },
+          ink: { value: "#271F1B" },
+          ember: { value: "#B33F2C" },
+          fog: { value: "#F3EFEA" },
+          rule: { value: "#D7CDC4" },
         },
         fonts: {
           display: { value: "var(--font-manrope), Arial, sans-serif" },
