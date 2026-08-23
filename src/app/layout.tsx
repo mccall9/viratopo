@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import styles from "./arena-pages.module.css";
-
-void styles;
+import "./arena-pages.css";
 
 export const metadata: Metadata = {
   title: "ViraTopo — a edição onde produtos disputam espaço",
