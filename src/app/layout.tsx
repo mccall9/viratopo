@@ -3,6 +3,7 @@ import "./globals.css";
 import "./arena-pages.css";
 import "./sabia-theme.css";
 import "./ranking-preview.css";
+import "./glass-nav.css";
 
 export const metadata: Metadata = {
   title: "ViraTopo — a edição onde produtos disputam espaço",
