@@ -11,6 +11,7 @@ import "./font-swap.css";
 import "./standard-pages.css";
 import "./dino-grid.css";
 import "./market-system.css";
+import "./dino-club.css";
 import { ViraTopoProvider } from "@/components/mantine-provider";
 
 export const metadata: Metadata = {
