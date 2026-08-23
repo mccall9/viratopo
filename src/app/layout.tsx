@@ -6,6 +6,7 @@ import "./ranking-preview.css";
 import "./glass-nav.css";
 import "./policy-pages.css";
 import "./lance-ui.css";
+import "./font-swap.css";
 
 export const metadata: Metadata = {
   title: "ViraTopo — a edição onde produtos disputam espaço",

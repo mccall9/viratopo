@@ -1,0 +1,30 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  --display: "Figtree", Arial, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+body {
+  font-family: var(--display);
+}
+
+.lance-app .arena-nav nav a,
+.lance-hero h1,
+.board-heading h2,
+.lance-explainer h2,
+.lance-status h2,
+.lance-board strong {
+  font-family: var(--display);
+}
+
+.lance-hero h1,
+.board-heading h2,
+.lance-explainer h2 {
+  font-weight: 720;
+  letter-spacing: -0.065em;
+}
+
+.lance-app .arena-nav nav a {
+  font-weight: 650;
+}
