@@ -8,6 +8,7 @@ import "./policy-pages.css";
 import "./lance-ui.css";
 import "./font-swap.css";
 import "./standard-pages.css";
+import "./dino-grid.css";
 
 export const metadata: Metadata = {
   title: "ViraTopo — a edição onde produtos disputam espaço",
