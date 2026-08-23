@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
 
 export default function NotFound() {
-  return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, textAlign: "center" }}><section><p style={{ letterSpacing: "2px", fontSize: 13 }}>FORA DO RANKING</p><h1 style={{ fontSize: "clamp(48px, 10vw, 100px)", margin: "10px 0", letterSpacing: "-5px" }}>Essa página caiu.</h1><p>Ela não existe ou alguém deu um lance maior.</p><Link style={{ display: "inline-block", background: "#bcff16", padding: "12px 16px", borderRadius: 10, fontWeight: 800, marginTop: 15 }} href="/">VOLTAR AO TOPO →</Link></section></main>;
+  return <main className="arena-app"><ArenaNav /><section className="not-found-shell"><span className="kicker">ERRO 404</span><strong>404</strong><h1>Esta posição<br /><em>não existe.</em></h1><p>A página pode ter mudado de endereço ou ainda não entrou na Arena.</p><Link className="button button-primary" href="/">Voltar para a Arena <ArrowRight size={17} /></Link></section><ArenaFooter /></main>;
 }
