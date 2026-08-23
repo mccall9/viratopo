@@ -1,5 +1,7 @@
 node_modules
 .next
+package-lock.json
+styled-system
 .env*
 !.env.example
 coverage
