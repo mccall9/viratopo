@@ -29,8 +29,8 @@
 .quick-entry { align-items: stretch; }
 .quick-entry label { height: 56px; border: 1px solid var(--market-line); background: #fff; border-radius: var(--market-radius); box-shadow: inset 0 -1px rgba(19,72,43,.025); }
 .quick-entry label:focus-within { border-color: var(--market-forest); box-shadow: 0 0 0 3px rgba(13,106,61,.11); }
-.lance-submit { height: 56px; border-radius: var(--market-radius); background: var(--market-forest); font-size: 11px; }
-.lance-submit:hover { background: #095630; }
+.lance-submit, .lance-submit.mantine-Button-root { height: 56px; border-radius: var(--market-radius); background: var(--market-forest); font-size: 11px; }
+.lance-submit:hover, .lance-submit.mantine-Button-root:hover { background: #095630; }
 .lance-hero > small { color: var(--market-muted); }
 
 .lance-status { border-color: var(--market-line); background: transparent; }

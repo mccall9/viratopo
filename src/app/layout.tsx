@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@mantine/core/styles.css";
 import "./globals.css";
 import "./arena-pages.css";
 import "./sabia-theme.css";
@@ -10,6 +11,7 @@ import "./font-swap.css";
 import "./standard-pages.css";
 import "./dino-grid.css";
 import "./market-system.css";
+import { ViraTopoProvider } from "@/components/mantine-provider";
 
 export const metadata: Metadata = {
   title: "ViraTopo — a edição onde produtos disputam espaço",
@@ -19,5 +21,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+  return <html lang="pt-BR"><body><ViraTopoProvider>{children}</ViraTopoProvider></body></html>;
 }
