@@ -124,7 +124,11 @@ export default function Home() {
 
       <section className="lance-hero">
         <div className="season-line"><span>Temporada em preparação</span><b>ranking abre com o primeiro PIX confirmado</b><a href="/termos">ver regras <ArrowRight size={13} /></a></div>
-        <h1>Coloque seu produto<br />no topo por <span><button onClick={() => setBid((value) => Math.max(1, value - 1))} aria-label="Diminuir lance"><Minus size={17} /></button>R$ {bid}<button onClick={() => setBid((value) => value + 1)} aria-label="Aumentar lance"><Plus size={17} /></button></span></h1>
+        <h1>Coloque seu produto<br />no topo.</h1>
+        <div className="hero-bid" aria-label={`Lance inicial de R$ ${bid}`}>
+          <span>Lance inicial</span>
+          <div><button onClick={() => setBid((value) => Math.max(1, value - 1))} aria-label="Diminuir lance"><Minus size={17} /></button><strong>R$ {bid}</strong><button onClick={() => setBid((value) => value + 1)} aria-label="Aumentar lance"><Plus size={17} /></button></div>
+        </div>
         <p>O lance inicial define sua entrada. Se alguém ultrapassar, você decide se quer voltar à frente.</p>
         <form className="quick-entry" onSubmit={continueToAccount} noValidate>
           <label><Link2 size={17} /><span className="sr-only">Endereço do produto</span><input value={url} onChange={(event) => updateUrl(event.target.value)} aria-invalid={Boolean(urlError)} aria-describedby={urlError ? "url-error" : undefined} placeholder="site do seu produto ou @usuário" inputMode="url" /></label>
