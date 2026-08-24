@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = { title: "Regras e termos de uso", description: "Regras de funcionamento, conteúdo aceito e pagamentos do ViraTopo.", alternates: { canonical: "/termos" } };
+export const metadata = createPageMetadata({ title: "Regras e termos de uso", description: "Regras do ranking ViraTopo, conteúdo aceito e condições do fluxo PIX demonstrativo, que não realiza cobranças.", path: "/termos" });
 
 export default function TermsPage() {
   return (

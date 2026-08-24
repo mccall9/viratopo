@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
 import { ViraIcon } from "@/components/vira-icon";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = { title: "Ranking de produtos", description: "Acompanhe a classificação pública do ViraTopo. Posições só aparecem após confirmação e métricas só aparecem quando existem.", alternates: { canonical: "/ranking" } };
+export const metadata = createPageMetadata({ title: "Ranking de produtos", description: "Acompanhe a classificação pública do ViraTopo. Posições só aparecem após confirmação e métricas só aparecem quando existem.", path: "/ranking" });
 
 export default function RankingPage() {
   return (

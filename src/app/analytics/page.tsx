@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
 import { ViraIcon, type ViraIconName } from "@/components/vira-icon";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = { title: "Estatísticas públicas", description: "Critérios e métricas públicas do ranking ViraTopo, exibidas somente quando existem dados reais.", alternates: { canonical: "/analytics" } };
+export const metadata = createPageMetadata({ title: "Estatísticas públicas", description: "Critérios e métricas públicas do ranking ViraTopo, exibidas somente quando existem dados reais.", path: "/analytics" });
 const metrics: Array<{ label: string; icon: ViraIconName }> = [{ label: "Entradas confirmadas", icon: "receipt" }, { label: "Exibições entregues", icon: "eye" }, { label: "Cliques gerados", icon: "pointer" }];
 
 export default function AnalyticsPage() {

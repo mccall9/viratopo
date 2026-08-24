@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
 import { ViraIcon } from "@/components/vira-icon";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = { title: "Painel", description: "Área de acompanhamento das entradas do ViraTopo.", robots: { index: false, follow: false } };
+export const metadata = createPageMetadata({ title: "Painel", description: "Área de acompanhamento das entradas do ViraTopo, disponível apenas quando houver uma operação real.", path: "/painel", index: false });
 
 export default function PainelPage() {
   return (

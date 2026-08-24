@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
+import { createPageMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = { title: "Política de privacidade", description: "Como o ViraTopo pretende tratar dados de conta, produto, métricas e pagamentos.", alternates: { canonical: "/privacidade" } };
+export const metadata = createPageMetadata({ title: "Política de privacidade", description: "Conheça o estágio atual do MVP ViraTopo e como dados de conta, produto, métricas e pagamentos poderão ser tratados no futuro.", path: "/privacidade" });
 
 export default function PrivacyPage() {
   return (

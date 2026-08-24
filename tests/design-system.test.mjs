@@ -16,3 +16,13 @@ test("a faixa editorial e o aviso causal permanecem no fluxo", async () => {
   assert.match(home, /className="inline-notice"/);
   assert.match(home, /Nenhuma cobrança ou entrada real foi criada/);
 });
+
+test("a hero usa regras reais e uma demonstração inequivocamente inválida", async () => {
+  const home = await readFile("src/components/home-arena.tsx", "utf8");
+  assert.match(home, /className="hero-radar"/);
+  assert.match(home, /className="hero-console"/);
+  assert.match(home, /DEMONSTRACAO-VIRATOPO-SEM-COBRANCA/);
+  assert.match(home, /Preparar entrada/);
+  assert.doesNotMatch(home, /000201010212/);
+  assert.doesNotMatch(home, /Entrar no ranking/);
+});

@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
 import { HomeArena } from "@/components/home-arena";
+import { createPageMetadata, SITE_DESCRIPTION } from "@/lib/site-metadata";
 
-export const metadata: Metadata = {
-  title: "Ranking público de produtos",
-  description: "Dispute visibilidade em um ranking público de produtos brasileiros, ordenado por lances confirmados e sem números inventados.",
-  alternates: { canonical: "/" },
-};
+export const metadata = createPageMetadata({ title: "Ranking público de produtos", description: SITE_DESCRIPTION, path: "/" });
 
 export default function HomePage() {
   return <HomeArena />;
