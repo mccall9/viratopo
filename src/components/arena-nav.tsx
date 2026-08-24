@@ -20,9 +20,9 @@ export function ArenaNav({ active, variant = "floating" }: ArenaNavProps) {
         {menuOpen ? <X size={18} /> : <Menu size={19} />}
       </button>
       <nav id="primary-navigation" aria-label="Navegação principal">
-        <Link className={active === "arena" ? "active" : ""} href="/" onClick={closeMenu}>Quadro</Link>
-        <Link className={active === "rules" ? "active" : ""} href="/termos" onClick={closeMenu}>Regras</Link>
-        <Link className={active === "analytics" ? "active" : ""} href="/analytics" onClick={closeMenu}>Estatísticas</Link>
+        <Link className={active === "arena" ? "active" : ""} aria-current={active === "arena" ? "page" : undefined} href="/" onClick={closeMenu}>Quadro</Link>
+        <Link className={active === "rules" ? "active" : ""} aria-current={active === "rules" ? "page" : undefined} href="/termos" onClick={closeMenu}>Regras</Link>
+        <Link className={active === "analytics" ? "active" : ""} aria-current={active === "analytics" ? "page" : undefined} href="/analytics" onClick={closeMenu}>Estatísticas</Link>
       </nav>
     </header>
   );
