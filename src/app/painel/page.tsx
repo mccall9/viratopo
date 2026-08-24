@@ -1,7 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Bell, CircleGauge, Radar } from "lucide-react";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
+import { ViraIcon } from "@/components/vira-icon";
+
+export const metadata: Metadata = { title: "Painel", description: "Área de acompanhamento das entradas do ViraTopo.", robots: { index: false, follow: false } };
 
 export default function PainelPage() {
-  return <main className="arena-app"><a className="skip" href="#painel">Pular para painel</a><ArenaNav /><section className="page-head compact" id="painel"><div><span className="kicker">CENTRAL DO PRODUTO</span><h1>Seu espaço de<br /><em>controle.</em></h1><p>Entre na arena para acompanhar posição, lance e avisos da sua entrada.</p></div><Link className="button button-primary" href="/">Criar entrada <ArrowRight size={17} /></Link></section><section className="panel-board"><article className="panel-profile"><span className="card-label">PRODUTO CONECTADO</span><div className="profile-placeholder">VT</div><h2>Nenhum produto conectado.</h2><p>Assim que você criar uma entrada confirmada, o painel mostrará o endereço e o status da disputa.</p></article><article className="panel-radar"><span className="card-label">SUA POSIÇÃO</span><div><Radar size={29} /><strong>—</strong><p>A posição aparece após a confirmação.</p></div></article><article className="panel-alerts"><span className="card-label">ALERTAS</span><ul><li><Bell size={15} /> Avisos de posição ficam aqui.</li><li><CircleGauge size={15} /> Você verá quando precisar reagir.</li></ul></article></section><section className="panel-cta"><div><span className="card-label">PRONTO PARA COMEÇAR?</span><h2>Crie uma entrada e deixe a arena responder.</h2></div><Link className="button button-primary" href="/">Entrar na arena <ArrowRight size={17} /></Link></section><ArenaFooter /></main>;
+  return (
+    <div className="arena-app">
+      <a className="skip" href="#painel">Pular para o painel</a>
+      <ArenaNav />
+      <main>
+        <section className="page-head compact" id="painel"><div><span className="eyebrow">CENTRAL DO PRODUTO</span><h1>Seu espaço de controle.</h1><p>Acompanhe posição, lance e alertas depois que uma entrada real for confirmada.</p></div><Link className="button button-primary" href="/">Preparar entrada <ViraIcon name="arrow-right" /></Link></section>
+        <section className="panel-board" aria-label="Resumo do produto">
+          <article className="panel-profile"><span className="eyebrow">PRODUTO CONECTADO</span><div className="profile-placeholder">VT</div><h2>Nenhum produto conectado.</h2><p>O endereço e o status aparecerão aqui após uma confirmação real.</p></article>
+          <article className="panel-radar"><span className="eyebrow">SUA POSIÇÃO</span><div><ViraIcon name="radar" size={29} /><strong className="tabular">—</strong><p>A posição ainda não existe.</p></div></article>
+          <article className="panel-alerts"><span className="eyebrow">ALERTAS</span><ul><li><ViraIcon name="bell" /> Avisos de posição aparecerão aqui.</li><li><ViraIcon name="gauge" /> Você saberá quando houver mudança.</li></ul></article>
+        </section>
+        <section className="panel-cta"><div><span className="eyebrow">PRONTO PARA TESTAR?</span><h2>Prepare uma entrada no fluxo demonstrativo.</h2></div><Link className="button button-primary" href="/">Abrir quadro <ViraIcon name="arrow-right" /></Link></section>
+      </main>
+      <ArenaFooter />
+    </div>
+  );
 }

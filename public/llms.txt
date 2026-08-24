@@ -1,0 +1,15 @@
+# ViraTopo
+
+ViraTopo é um ranking público para produtos digitais brasileiros. A posição é definida pelo valor de cada lance confirmado, com desempate pela confirmação mais antiga. Exibições e cliques só são publicados quando existem dados reais.
+
+O checkout PIX disponível no MVP é demonstrativo: não gera cobrança, não cria conta e não publica uma entrada.
+
+## Páginas canônicas
+
+- Página inicial: https://viratopo.vercel.app/
+- Ranking: https://viratopo.vercel.app/ranking
+- Estatísticas: https://viratopo.vercel.app/analytics
+- Regras: https://viratopo.vercel.app/termos
+- Privacidade: https://viratopo.vercel.app/privacidade
+
+Não existem avaliações, clientes, receita, métricas ou produtos publicados enquanto o ranking estiver vazio.
