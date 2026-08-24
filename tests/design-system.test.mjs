@@ -33,7 +33,15 @@ test("a hero usa regras reais e termina em pré-cadastro verificável", async ()
   assert.match(home, /Simular meu lance/);
   assert.match(home, /fetch\("\/api\/waitlist"/);
   assert.match(home, /Lista temporariamente indisponível/);
+  assert.match(home, /response\.status === 429/);
+  assert.match(home, /Limite de tentativas atingido/);
   assert.doesNotMatch(home, /DEMONSTRACAO|000201010212|Confirmar pagamento/);
+});
+
+test("a metodologia acompanha o estado real da coleta", async () => {
+  const analytics = await readFile("src/app/analytics/page.tsx", "utf8");
+  assert.match(analytics, /collectionStatus\.value === "Ativa"/);
+  assert.match(analytics, /Os contadores publicados seguem estes critérios/);
 });
 
 test("os estados preenchidos usam a fonte pública sem produtos fictícios", async () => {

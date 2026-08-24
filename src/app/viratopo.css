@@ -346,6 +346,7 @@
 .waitlist-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .waitlist-feedback { padding: 13px 14px; border: 1px solid #d8aa9f; border-radius: var(--radius-sm); background: #fff5f2; color: var(--color-danger); outline: 0; }
 .waitlist-feedback[data-kind="unavailable"] { border-color: #c9b876; background: #fffbed; color: #6f5b09; }
+.waitlist-feedback[data-kind="rate-limited"] { border-color: #c9b876; background: #fffbed; color: #6f5b09; }
 .waitlist-feedback:focus-visible { box-shadow: 0 0 0 3px var(--color-brand-soft); }
 .waitlist-feedback strong { display: block; font-size: 13px; }
 .waitlist-feedback p { margin: 4px 0 0; color: inherit; font-size: 12px; line-height: 1.5; }

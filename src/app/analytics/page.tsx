@@ -62,7 +62,7 @@ export default async function AnalyticsPage() {
             <p>Será contada quando ao menos metade do cartão permanecer visível por um segundo. Repetições do mesmo visitante, produto e dia serão deduplicadas; tráfego automatizado será excluído.</p>
             <h3>Clique externo</h3>
             <p>Será contado na ativação voluntária do link do produto, com deduplicação por visitante, produto e janela de 30 minutos.</p>
-            <p><strong>Importante:</strong> esta metodologia será implementada e testada antes de qualquer contador ser publicado. Até lá, “—” significa indisponível, não zero.</p>
+            <p><strong>Importante:</strong> {collectionStatus.value === "Ativa" ? "Os contadores publicados seguem estes critérios; “—” identifica uma métrica ainda indisponível, não zero." : "Esta metodologia será implementada e testada antes de qualquer contador ser publicado. Até lá, “—” significa indisponível, não zero."}</p>
             <Link href="/ranking">Ir ao ranking <ViraIcon name="arrow-right" /></Link>
           </div>
         </section>

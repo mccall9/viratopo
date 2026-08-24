@@ -11,7 +11,7 @@ import { publicProductHref } from "@/lib/public-ranking-parser.mjs";
 import { formatBid } from "@/lib/ranking-rules";
 
 type Flow = "summary" | "waitlist" | null;
-type WaitlistStatus = "idle" | "loading" | "success" | "error" | "unavailable";
+type WaitlistStatus = "idle" | "loading" | "success" | "error" | "unavailable" | "rate-limited";
 
 const MIN_BID = 1;
 const MAX_BID = 9_999;
@@ -54,9 +54,10 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
   const [consentError, setConsentError] = useState("");
   const [website, setWebsite] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<WaitlistStatus>("idle");
+  const [retryAfterMinutes, setRetryAfterMinutes] = useState(60);
 
   useEffect(() => {
-    if (["success", "error", "unavailable"].includes(waitlistStatus)) {
+    if (["success", "error", "unavailable", "rate-limited"].includes(waitlistStatus)) {
       waitlistFeedbackRef.current?.focus();
     }
   }, [waitlistStatus]);
@@ -102,7 +103,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
   const continueToWaitlist = () => {
     setEmailError("");
     setConsentError("");
-    setWaitlistStatus("idle");
+    setWaitlistStatus((current) => current === "rate-limited" ? current : "idle");
     setFlow("waitlist");
     requestAnimationFrame(() => emailRef.current?.focus());
   };
@@ -127,7 +128,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
 
   const submitWaitlist = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (waitlistStatus === "loading") return;
+    if (waitlistStatus === "loading" || waitlistStatus === "rate-limited") return;
 
     const normalizedEmail = email.trim();
     const hasValidEmail = /^\S+@\S+\.\S+$/.test(normalizedEmail);
@@ -166,6 +167,12 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
 
       if (response.ok) {
         setWaitlistStatus("success");
+      } else if (response.status === 429) {
+        const retryAfterSeconds = Number(response.headers.get("retry-after"));
+        setRetryAfterMinutes(Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+          ? Math.max(1, Math.ceil(retryAfterSeconds / 60))
+          : 60);
+        setWaitlistStatus("rate-limited");
       } else if (response.status === 503) {
         setWaitlistStatus("unavailable");
       } else {
@@ -349,7 +356,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
                       onChange={(event) => {
                         setEmail(event.target.value);
                         setEmailError("");
-                        setWaitlistStatus("idle");
+                        setWaitlistStatus((current) => current === "rate-limited" ? current : "idle");
                       }}
                       placeholder="voce@empresa.com"
                       autoFocus
@@ -372,7 +379,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
                         onChange={(event) => {
                           setConsent(event.target.checked);
                           setConsentError("");
-                          setWaitlistStatus("idle");
+                          setWaitlistStatus((current) => current === "rate-limited" ? current : "idle");
                         }}
                         aria-invalid={Boolean(consentError)}
                         aria-describedby={consentError ? flowConsentErrorId : undefined}
@@ -389,18 +396,18 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
                     <input id="waitlist-website" name="website" type="text" value={website} onChange={(event) => setWebsite(event.target.value)} autoComplete="off" tabIndex={-1} />
                   </div>
 
-                  {(waitlistStatus === "error" || waitlistStatus === "unavailable") && (
+                  {(waitlistStatus === "error" || waitlistStatus === "unavailable" || waitlistStatus === "rate-limited") && (
                     <div ref={waitlistFeedbackRef} id={waitlistFeedbackId} className="waitlist-feedback" data-kind={waitlistStatus} role="alert" tabIndex={-1}>
-                      <strong>{waitlistStatus === "unavailable" ? "Lista temporariamente indisponível." : "Cadastro não confirmado."}</strong>
-                      <p>{waitlistStatus === "unavailable" ? "Nada foi enviado. Tente novamente mais tarde." : "Nada foi salvo. Confira os dados e tente novamente."}</p>
+                      <strong>{waitlistStatus === "rate-limited" ? "Limite de tentativas atingido." : waitlistStatus === "unavailable" ? "Lista temporariamente indisponível." : "Cadastro não confirmado."}</strong>
+                      <p>{waitlistStatus === "rate-limited" ? `Aguarde cerca de ${retryAfterMinutes} minutos antes de enviar novamente.` : waitlistStatus === "unavailable" ? "Nada foi enviado. Tente novamente mais tarde." : "Nada foi salvo. Confira os dados e tente novamente."}</p>
                     </div>
                   )}
 
                   <div className="flow-actions">
                     <button className="button button-secondary" type="button" onClick={returnToSummary} disabled={waitlistStatus === "loading"}>Voltar</button>
-                    <button className="button button-primary" type="submit" disabled={waitlistStatus === "loading"}>
-                      {waitlistStatus === "loading" ? "Enviando…" : waitlistStatus === "error" || waitlistStatus === "unavailable" ? "Tentar novamente" : "Entrar na lista"}
-                      {waitlistStatus !== "loading" && <ViraIcon name="arrow-right" />}
+                    <button className="button button-primary" type="submit" disabled={waitlistStatus === "loading" || waitlistStatus === "rate-limited"}>
+                      {waitlistStatus === "loading" ? "Enviando…" : waitlistStatus === "rate-limited" ? `Aguarde ${retryAfterMinutes} min` : waitlistStatus === "error" || waitlistStatus === "unavailable" ? "Tentar novamente" : "Entrar na lista"}
+                      {waitlistStatus !== "loading" && waitlistStatus !== "rate-limited" && <ViraIcon name="arrow-right" />}
                     </button>
                   </div>
                 </form>
