@@ -53,21 +53,7 @@
 .arena-nav nav a.active { color: var(--color-brand-deep); background: var(--color-brand-soft); }
 .nav-toggle { display: none; }
 
-.season-rail {
-  width: min(var(--container), calc(100% - 40px));
-  margin: 32px auto 0;
-  padding: 13px 0;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 24px;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  font-size: 13px;
-}
-.season-rail span { color: var(--color-brand-deep); font-weight: 750; }
-.season-rail p { margin: 0; color: var(--color-muted); }
-.season-rail a, .board-heading a, .data-empty a, .ranking-callout a {
+.board-heading a, .data-empty a, .ranking-callout a {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -97,7 +83,7 @@
 .lance-hero {
   width: min(var(--container), calc(100% - 40px));
   margin: auto;
-  padding: 72px 0 54px;
+  padding: 42px 0 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -461,8 +447,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .arena-nav nav[data-open="false"] { display: none; }
   .arena-nav nav[data-open="true"] { display: grid; }
   .arena-nav nav a { width: 100%; }
-  .season-rail { display: none; }
-  .lance-hero { padding: 52px 0 48px; }
+  .lance-hero { padding: 32px 0 48px; }
   .hero-kicker { align-items: center; gap: 9px; flex-wrap: wrap; }
   .hero-mobile-status { display: inline-flex; color: var(--color-muted); font: 600 10px/1.4 var(--font-mono); }
   .hero-mobile-status::before { content: "·"; margin-right: 9px; color: var(--color-brand); }
@@ -512,7 +497,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 @media (max-width: 480px) {
   .lance-hero, .lance-status, .lance-board, .lance-explainer, .page-head, .ranking-layout, .ranking-callout, .metric-row, .data-stage, .panel-board, .panel-cta, .policy-shell, .not-found-shell, .arena-footer, .inline-notice { width: calc(100% - 28px); }
-  .lance-hero { padding: 40px 0 42px; }
+  .lance-hero { padding: 24px 0 42px; }
   .hero-kicker { display: grid; justify-items: center; gap: 5px; }
   .hero-mobile-status::before { display: none; }
   .hero-copy h1 { margin-block: 16px 18px; }

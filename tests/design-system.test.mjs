@@ -10,9 +10,9 @@ test("a fundação visual não reintroduz camadas antigas", async () => {
   }
 });
 
-test("a faixa editorial e o aviso causal permanecem no fluxo", async () => {
+test("o hero começa sem faixa redundante e mantém o aviso causal", async () => {
   const home = await readFile("src/components/home-arena.tsx", "utf8");
-  assert.match(home, /className="season-rail"/);
+  assert.doesNotMatch(home, /className="season-rail"|Temporada sem entradas/);
   assert.match(home, /className="inline-notice"/);
   assert.match(home, /Nenhuma cobrança ou entrada real foi criada/);
 });

@@ -136,14 +136,6 @@ export function HomeArena() {
       <ArenaNav active="board" />
 
       <main id="conteudo">
-        <section className="season-rail" aria-label="Status da temporada">
-          <span>Temporada sem entradas</span>
-          <p>Pagamentos reais ainda não estão ativos.</p>
-          <Link href="/termos">
-            Entenda as regras <ViraIcon name="arrow-right" size={15} />
-          </Link>
-        </section>
-
         <section className="lance-hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <div className="hero-kicker">
