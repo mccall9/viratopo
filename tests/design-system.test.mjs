@@ -10,6 +10,13 @@ test("a fundação visual não reintroduz camadas antigas", async () => {
   }
 });
 
+test("o fundo mantém o grid de quadrados espaçados e visível", async () => {
+  const globals = await readFile("src/styles/globals.css", "utf8");
+  assert.match(globals, /width='36' height='36'/);
+  assert.match(globals, /width='30' height='30'/);
+  assert.match(globals, /stroke-opacity='\.065'/);
+});
+
 test("o hero começa sem faixa redundante e mantém o aviso causal", async () => {
   const home = await readFile("src/components/home-arena.tsx", "utf8");
   assert.doesNotMatch(home, /className="season-rail"|Temporada sem entradas/);
