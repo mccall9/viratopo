@@ -34,3 +34,6 @@ button,.button,.lance-submit.mantine-Button-root{transition:transform 140ms var(
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.flow-panel{transform:none!important}.arena-nav nav{transform:none!important}}
 @media(prefers-reduced-transparency:reduce){.arena-nav,.quick-entry{background:#fff;backdrop-filter:none}}
 @media(prefers-contrast:more){.arena-nav,.lance-board,.ranking-layout,.data-stage,.flow-panel{border-color:var(--ink)}}
+
+/* Monetary values must never shrink or clip between the bid controls. */
+.hero-bid>div{flex:0 0 auto;white-space:nowrap}.hero-bid strong,.bid-row strong,.slot-bid b{display:block;min-width:max-content;line-height:1.25;white-space:nowrap;overflow:visible}.hero-bid strong{padding:1px 0}
