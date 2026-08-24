@@ -36,7 +36,7 @@ export default async function RankingPage() {
         <section className="page-head" id="ranking">
           <div>
             <span className="eyebrow">RANKING PÚBLICO</span>
-            <h1>{hasEntries ? "A disputa, sem voto escondido." : isReadyEmpty ? "Nenhuma entrada confirmada foi retornada." : ranking.state === "unconfigured" ? "O placar será conectado antes do lançamento." : "O placar não pôde ser consultado."}</h1>
+            <h1>{hasEntries ? "A disputa, sem voto escondido." : isReadyEmpty ? "Nenhuma entrada confirmada foi retornada." : ranking.state === "unconfigured" ? "O placar será conectado antes da abertura." : "O placar não pôde ser consultado."}</h1>
             <p>{hasEntries ? "Um produto por posição, ordenado pelo maior lance confirmado." : isReadyEmpty ? "A fonte pública respondeu sem entradas. Isso não presume que uma temporada esteja aberta." : ranking.state === "unconfigured" ? "A fonte pública ainda não está configurada. Não mostramos posições de demonstração." : "A fonte pública está temporariamente indisponível. Nenhuma posição foi presumida."}</p>
           </div>
           <div className="page-status"><span>{status.label}</span><strong>{status.value}</strong><small>{status.note}</small></div>
