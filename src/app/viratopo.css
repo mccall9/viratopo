@@ -17,3 +17,17 @@
 .lance-hero h1,.board-heading h2,.page-head h1,.policy-header h1,.not-found-shell h1,.flow-panel h2{text-wrap:balance}
 .lance-hero>p,.lance-explainer p,.page-head p,.policy-header p,.rank-empty p,.data-empty p,.policy-content p{text-wrap:pretty}
 @media(max-width:760px){.arena-nav{top:max(10px,env(safe-area-inset-top));inset-inline:10px}.flow-backdrop{padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom))}}
+
+/* Design-engineering pass: motion only communicates response or a context change. */
+:root{--ease-out:cubic-bezier(.23,1,.32,1)}
+button,.button,.lance-submit.mantine-Button-root{transition:transform 150ms var(--ease-out),background-color 150ms ease,color 150ms ease,border-color 150ms ease}
+button:active,.button:active,.lance-submit.mantine-Button-root:active{transform:scale(.97)}
+.field-error{width:min(700px,100%);margin:8px auto -4px;color:#a23b28;font-size:13px;line-height:1.4;text-align:left}
+input[aria-invalid="true"]{box-shadow:0 0 0 2px #f3c5ba!important;border-color:#b94a36!important}
+.flow-panel{transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out)}
+@starting-style{.flow-panel{opacity:0;transform:scale(.98)}}
+.button-copy,.button-confirm{display:inline-flex;align-items:center;justify-content:center;gap:8px}.button-confirm{display:none}.is-confirmed{border-color:#8bc8a0;background:var(--accent-soft);color:var(--accent)}.is-confirmed .button-copy{display:none}.is-confirmed .button-confirm{display:inline-flex}
+.arena-toast{transition:opacity 180ms var(--ease-out),transform 180ms var(--ease-out)}
+@starting-style{.arena-toast{opacity:0;transform:translate(-50%,12px)}}
+@media(hover:hover) and (pointer:fine){.button:hover,.lance-board li button:hover{transform:translateY(-1px)}.lance-hero h1 span button:hover,.bid-row button:hover,.icon-close:hover{border-color:var(--accent);color:var(--accent)}}
+@media(prefers-reduced-motion:reduce){.flow-panel,.arena-toast,button,.button,.lance-submit.mantine-Button-root{transition:none!important}}
