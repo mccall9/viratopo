@@ -2,26 +2,19 @@
 
 import { Dialog } from "@ark-ui/react/dialog";
 import Link from "next/link";
-import { FormEvent, useId, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { ArenaFooter, ArenaNav } from "@/components/arena-nav";
 import { ViraIcon } from "@/components/vira-icon";
-import {
-  normalizeProductUrl,
-  requestPaymentConfirmation,
-  type PaymentStatus,
-} from "@/lib/entry-flow.mjs";
+import { normalizeProductUrl } from "@/lib/entry-flow.mjs";
+import type { PublicRankingResult } from "@/lib/public-ranking";
+import { publicProductHref } from "@/lib/public-ranking-parser.mjs";
+import { formatBid } from "@/lib/ranking-rules";
 
-type Flow = "entry" | "account" | "pix" | null;
-
-const FLOW_STEPS: Record<Exclude<Flow, null>, number> = {
-  entry: 1,
-  account: 2,
-  pix: 3,
-};
+type Flow = "summary" | "waitlist" | null;
+type WaitlistStatus = "idle" | "loading" | "success" | "error" | "unavailable";
 
 const MIN_BID = 1;
 const MAX_BID = 9_999;
-const PIX_DEMO_CODE = "DEMONSTRACAO-VIRATOPO-SEM-COBRANCA";
 
 const radarRules = [
   "Lance simulado a partir de R$ 1",
@@ -31,44 +24,62 @@ const radarRules = [
   "Métricas somente com atividade real",
 ];
 
-export function HomeArena() {
+export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
+  const leader = ranking.entries[0] ?? null;
+  const isReadyEmpty = ranking.state === "ready" && !leader;
+  const leaderAtCeiling = Boolean(leader && leader.amountCents >= MAX_BID * 100);
+  const nextTopBid = leader ? Math.min(MAX_BID, Math.floor(leader.amountCents / 100) + 1) : MIN_BID;
+  const leaderHref = leader ? publicProductHref(leader.productUrl) : null;
   const inputId = useId();
   const inputHintId = `${inputId}-hint`;
   const inputErrorId = `${inputId}-error`;
-  const flowUrlErrorId = useId();
   const flowEmailErrorId = useId();
-  const copyErrorId = useId();
+  const flowConsentErrorId = useId();
+  const waitlistFeedbackId = useId();
   const heroInputRef = useRef<HTMLInputElement>(null);
-  const flowUrlRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLInputElement>(null);
+  const summaryContinueRef = useRef<HTMLButtonElement>(null);
+  const waitlistFeedbackRef = useRef<HTMLDivElement>(null);
   const heroSubmitRef = useRef<HTMLButtonElement>(null);
+  const waitlistRequestRef = useRef<AbortController | null>(null);
 
   const [flow, setFlow] = useState<Flow>(null);
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [bid, setBid] = useState(MIN_BID);
-  const [copied, setCopied] = useState(false);
-  const [copying, setCopying] = useState(false);
-  const [copyError, setCopyError] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
+  const [bid, setBid] = useState(nextTopBid);
+  const [consent, setConsent] = useState(false);
+  const [consentError, setConsentError] = useState("");
+  const [website, setWebsite] = useState("");
+  const [waitlistStatus, setWaitlistStatus] = useState<WaitlistStatus>("idle");
+
+  useEffect(() => {
+    if (["success", "error", "unavailable"].includes(waitlistStatus)) {
+      waitlistFeedbackRef.current?.focus();
+    }
+  }, [waitlistStatus]);
 
   const formattedBid = `R$ ${bid.toLocaleString("pt-BR")}`;
 
   const closeFlow = () => {
+    waitlistRequestRef.current?.abort();
+    waitlistRequestRef.current = null;
     setFlow(null);
     setUrlError("");
     setEmailError("");
-    setCopyError("");
+    setConsentError("");
   };
 
-  const openFlow = (nextFlow: Exclude<Flow, null>) => {
+  const openSummary = () => {
     setUrlError("");
     setEmailError("");
-    setCopied(false);
-    setCopyError("");
-    setFlow(nextFlow);
+    setConsent(false);
+    setConsentError("");
+    setWebsite("");
+    setWaitlistStatus("idle");
+    setFlow("summary");
   };
 
   const validateUrl = (field: HTMLInputElement | null) => {
@@ -85,46 +96,91 @@ export function HomeArena() {
 
   const startFromHero = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (validateUrl(heroInputRef.current)) openFlow("account");
+    if (validateUrl(heroInputRef.current)) openSummary();
   };
 
-  const continueToAccount = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (validateUrl(flowUrlRef.current)) openFlow("account");
+  const continueToWaitlist = () => {
+    setEmailError("");
+    setConsentError("");
+    setWaitlistStatus("idle");
+    setFlow("waitlist");
+    requestAnimationFrame(() => emailRef.current?.focus());
   };
 
-  const continueToPix = (event: FormEvent<HTMLFormElement>) => {
+  const returnToSummary = () => {
+    setEmailError("");
+    setConsentError("");
+    setWaitlistStatus("idle");
+    setFlow("summary");
+    requestAnimationFrame(() => summaryContinueRef.current?.focus());
+  };
+
+  const focusHeroSimulator = () => {
+    heroInputRef.current?.scrollIntoView({ block: "center" });
+    requestAnimationFrame(() => heroInputRef.current?.focus());
+  };
+
+  const editSimulation = () => {
+    closeFlow();
+    focusHeroSimulator();
+  };
+
+  const submitWaitlist = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setEmailError("Informe um e-mail de teste válido para continuar.");
+    if (waitlistStatus === "loading") return;
+
+    const normalizedEmail = email.trim();
+    const hasValidEmail = /^\S+@\S+\.\S+$/.test(normalizedEmail);
+    setEmailError(hasValidEmail ? "" : "Informe um e-mail válido para entrar na lista.");
+    setConsentError(consent ? "" : "Confirme que deseja receber os avisos de lançamento.");
+    setWaitlistStatus("idle");
+
+    if (!hasValidEmail) {
       requestAnimationFrame(() => emailRef.current?.focus());
       return;
     }
-    setEmailError("");
-    openFlow("pix");
-  };
+    if (!consent) {
+      requestAnimationFrame(() => consentRef.current?.focus());
+      return;
+    }
 
-  const copyPix = async () => {
-    setCopyError("");
-    setCopying(true);
+    const controller = new AbortController();
+    waitlistRequestRef.current?.abort();
+    waitlistRequestRef.current = controller;
+    setWaitlistStatus("loading");
+
     try {
-      await navigator.clipboard.writeText(PIX_DEMO_CODE);
-      setCopied(true);
-    } catch {
-      setCopyError("Não foi possível copiar. Selecione o código manualmente.");
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          productUrl: url,
+          bidCents: bid * 100,
+          consent,
+          website,
+        }),
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        setWaitlistStatus("success");
+      } else if (response.status === 503) {
+        setWaitlistStatus("unavailable");
+      } else {
+        setWaitlistStatus("error");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setWaitlistStatus("error");
     } finally {
-      setCopying(false);
+      if (waitlistRequestRef.current === controller) waitlistRequestRef.current = null;
     }
   };
 
-  const registerDemoPayment = () => {
-    setPaymentStatus(requestPaymentConfirmation);
+  const finishWaitlist = () => {
     closeFlow();
-    requestAnimationFrame(() => heroSubmitRef.current?.focus());
-  };
-
-  const dismissNotice = () => {
-    setPaymentStatus("idle");
     requestAnimationFrame(() => heroSubmitRef.current?.focus());
   };
 
@@ -140,15 +196,15 @@ export function HomeArena() {
           <div className="hero-copy">
             <div className="hero-kicker">
               <span className="eyebrow">RANKING PÚBLICO PARA PRODUTOS</span>
-              <span className="hero-mobile-status">MVP EM PRÉ-LANÇAMENTO</span>
+              <span className="hero-mobile-status">{leader ? "TEMPORADA AO VIVO" : isReadyEmpty ? "SEM ENTRADAS RETORNADAS" : ranking.state === "unconfigured" ? "MVP EM PRÉ-LANÇAMENTO" : "DADOS INDISPONÍVEIS"}</span>
             </div>
             <h1 id="hero-title">
               <span>Coloque seu produto no topo.</span>
-              <em>A disputa começa em R$ 1.</em>
+              <em>{leader ? leaderAtCeiling ? `O #1 atingiu o teto de ${formatBid(MAX_BID * 100)}.` : `Assuma o #1 por ${formatBid(nextTopBid * 100)}.` : "Simule uma entrada a partir de R$ 1."}</em>
             </h1>
             <p>
-              Prepare um lance e teste como sua entrada funcionará. Sem votos,
-              algoritmo oculto ou números inventados.
+              Simule um lance e veja como sua entrada funcionará. Sem cobrança,
+              votos, algoritmo oculto ou números inventados.
             </p>
           </div>
 
@@ -170,17 +226,10 @@ export function HomeArena() {
             </ul>
 
             <div className="hero-console">
-              <form
-                className="quick-entry"
-                onSubmit={startFromHero}
-                noValidate
-                aria-label="Preparar entrada no ranking"
-              >
+              <form className="quick-entry" onSubmit={startFromHero} noValidate aria-label="Simular lance no ranking">
                 <div className="hero-console-grid">
                   <div className="field field-product">
-                    <label className="sr-only" htmlFor={inputId}>
-                      Endereço do produto
-                    </label>
+                    <label className="sr-only" htmlFor={inputId}>Endereço do produto</label>
                     <div className="input-shell">
                       <ViraIcon name="link" size={17} />
                       <input
@@ -203,284 +252,171 @@ export function HomeArena() {
                   <fieldset className="hero-bid">
                     <legend className="sr-only">Lance simulado, mínimo de R$ 1</legend>
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => setBid((value) => Math.max(MIN_BID, value - 1))}
-                        aria-label="Diminuir lance"
-                        disabled={bid === MIN_BID}
-                      >
+                      <button type="button" onClick={() => setBid((value) => Math.max(MIN_BID, value - 1))} aria-label="Diminuir lance" disabled={bid === MIN_BID}>
                         <ViraIcon name="minus" />
                       </button>
                       <output aria-live="polite">{formattedBid}</output>
-                      <button
-                        type="button"
-                        onClick={() => setBid((value) => Math.min(MAX_BID, value + 1))}
-                        aria-label="Aumentar lance"
-                        disabled={bid === MAX_BID}
-                      >
+                      <button type="button" onClick={() => setBid((value) => Math.min(MAX_BID, value + 1))} aria-label="Aumentar lance" disabled={bid === MAX_BID}>
                         <ViraIcon name="plus" />
                       </button>
                     </div>
                   </fieldset>
 
-                  <button
-                    ref={heroSubmitRef}
-                    className="button button-primary hero-submit"
-                    type="submit"
-                  >
-                    Preparar entrada <ViraIcon name="arrow-right" />
+                  <button ref={heroSubmitRef} className="button button-primary hero-submit" type="submit">
+                    Simular meu lance <ViraIcon name="arrow-right" />
                   </button>
                 </div>
 
-                <small id={inputHintId} className="field-hint">
-                  Use o mesmo endereço para aumentar um lance existente.
-                </small>
-                {urlError && (
-                  <small id={inputErrorId} className="field-error" role="alert">
-                    {urlError}
-                  </small>
-                )}
+                <small id={inputHintId} className="field-hint">A simulação não cobra, publica ou reserva uma posição.</small>
+                {urlError && <small id={inputErrorId} className="field-error" role="alert">{urlError}</small>}
               </form>
             </div>
           </div>
         </section>
 
-        {paymentStatus === "confirmation-pending" && (
-          <section className="inline-notice" role="status">
-            <ViraIcon name="check" />
-            <div>
-              <strong>Simulação concluída.</strong>
-              <p>
-                Nenhuma cobrança ou entrada real foi criada. A produção só
-                publicará uma posição após confirmação do provedor.
-              </p>
-            </div>
-            <button type="button" onClick={dismissNotice}>
-              Fechar
-            </button>
-          </section>
-        )}
-
         <section className="lance-status" aria-label="Resumo da temporada">
-          <article>
-            <span>PRÓXIMA ENTRADA</span>
-            <strong>Nenhum produto confirmado.</strong>
-            <p>A primeira confirmação inaugura a posição número 1.</p>
-          </article>
-          <article>
-            <span>ATIVIDADE RECENTE</span>
-            <strong>A temporada ainda não começou.</strong>
-            <p>Entradas e mudanças de posição aparecerão aqui.</p>
-          </article>
+          <article><span>{leader ? "LÍDER ATUAL" : "FONTE DO RANKING"}</span><strong>{leader ? leader.productName : isReadyEmpty ? "Nenhuma entrada retornada." : ranking.state === "unconfigured" ? "Ainda não conectada." : "Temporariamente indisponível."}</strong><p>{leader ? `${formatBid(leader.amountCents)} confirmados no lance atual.` : isReadyEmpty ? "A resposta pública não informa se há uma temporada aberta." : ranking.state === "unconfigured" ? "Nenhuma vaga ou posição foi presumida." : "Não foi possível verificar as posições agora."}</p></article>
+          <article><span>ATIVIDADE RECENTE</span><strong>{leader ? `${ranking.entries.length} ${ranking.entries.length === 1 ? "produto na disputa" : "produtos na disputa"}.` : isReadyEmpty ? "Nenhuma atividade retornada." : "Atividade não verificada."}</strong><p>{leader ? "A classificação reflete somente produtos verificados e lances confirmados." : isReadyEmpty ? "Uma confirmação só aparecerá durante uma temporada válida." : "Conecte ou restabeleça a fonte pública para consultar a temporada."}</p></article>
         </section>
 
         <section className="lance-board" aria-labelledby="board-title">
           <header className="board-heading">
-            <div>
-              <span className="eyebrow">QUADRO</span>
-              <h2 id="board-title">Ranking sem preenchimento artificial.</h2>
-            </div>
-            <Link href="/ranking">
-              Abrir ranking completo <ViraIcon name="arrow-right" size={16} />
-            </Link>
+            <div><span className="eyebrow">QUADRO</span><h2 id="board-title">Ranking sem preenchimento artificial.</h2></div>
+            <Link href="/ranking">Abrir ranking completo <ViraIcon name="arrow-right" size={16} /></Link>
           </header>
-          <div className="board-empty">
-            <span className="empty-position tabular">#1</span>
-            <div>
-              <strong>O primeiro lugar está disponível.</strong>
-              <p>
-                Quando um pagamento real for integrado e confirmado, o produto
-                aparecerá aqui.
-              </p>
+          {leader ? (
+            <div className="board-entry">
+              <span className="empty-position tabular">#1</span>
+              <span className="rank-monogram" aria-hidden="true">{leader.productName.slice(0, 1).toUpperCase()}</span>
+              <div><strong>{leader.productName}</strong><p>{leader.description || leader.category}</p></div>
+              <strong className="board-entry-bid tabular">{formatBid(leader.amountCents)}</strong>
+              {leaderHref && <a className="button button-secondary" href={leaderHref} target="_blank" rel="noopener noreferrer">Visitar produto <ViraIcon name="arrow-right" /></a>}
             </div>
-            <button
-              className="button button-secondary"
-              type="button"
-              onClick={() => openFlow("entry")}
-            >
-              Preparar entrada <ViraIcon name="arrow-right" />
-            </button>
-          </div>
+          ) : (
+            <div className="board-empty">
+              <span className="empty-position tabular">—</span>
+              <div><strong>{isReadyEmpty ? "Nenhuma entrada confirmada foi retornada." : ranking.state === "unconfigured" ? "O quadro ainda não foi conectado." : "O quadro não pôde ser consultado."}</strong><p>{isReadyEmpty ? "A resposta não anuncia uma temporada aberta nem reserva o primeiro lugar." : ranking.state === "unconfigured" ? "Nenhuma vaga ou posição está sendo presumida durante o pré-lançamento." : "Tente novamente mais tarde; não exibimos um estado presumido."}</p></div>
+              <button className="button button-secondary" type="button" onClick={focusHeroSimulator}>Simular no topo <ViraIcon name="arrow-right" /></button>
+            </div>
+          )}
         </section>
 
         <section className="lance-explainer" aria-labelledby="explainer-title">
+          <div><span className="eyebrow">COMO FUNCIONA</span><h2 id="explainer-title">Posição comprada.<br />Critério publicado.</h2></div>
           <div>
-            <span className="eyebrow">COMO FUNCIONA</span>
-            <h2 id="explainer-title">
-              Posição comprada.
-              <br />
-              Critério publicado.
-            </h2>
-          </div>
-          <div>
-            <p>
-              ViraTopo é um ranking público de produtos digitais brasileiros. A
-              posição é definida pelo valor de cada lance confirmado, com
-              desempate pela confirmação mais antiga. Exibições e cliques só são
-              publicados quando existem dados reais.
-            </p>
-            <p className="demo-note">
-              O checkout PIX deste MVP é demonstrativo e não realiza cobrança.
-            </p>
+            <p>ViraTopo é um ranking público de produtos digitais brasileiros. A posição é definida pelo valor de cada lance confirmado, com desempate pela confirmação mais antiga. Exibições e cliques só são publicados quando existem dados reais.</p>
+            <p className="demo-note">O simulador não cobra, não cria uma entrada e não reserva posição.</p>
           </div>
         </section>
       </main>
 
       <ArenaFooter />
 
-      <Dialog.Root
-        open={flow !== null}
-        onOpenChange={({ open }) => {
-          if (!open) closeFlow();
-        }}
-        lazyMount
-        unmountOnExit
-      >
+      <Dialog.Root open={flow !== null} onOpenChange={({ open }) => { if (!open) closeFlow(); }} lazyMount unmountOnExit>
         <Dialog.Backdrop className="flow-backdrop" />
         <Dialog.Positioner className="flow-positioner">
           <Dialog.Content className="flow-panel">
-            {flow && (
-              <span className="flow-progress tabular">
-                ETAPA {FLOW_STEPS[flow]} DE 3
-              </span>
-            )}
+            {flow && waitlistStatus !== "success" && <span className="flow-progress tabular">ETAPA {flow === "summary" ? 1 : 2} DE 2</span>}
 
-            {flow === "entry" && (
+            {flow === "summary" && (
               <>
-                <Dialog.Title>Comece pelo endereço.</Dialog.Title>
-                <Dialog.Description>
-                  O endereço será validado apenas neste navegador. Nenhuma entrada
-                  será criada.
-                </Dialog.Description>
-                <form onSubmit={continueToAccount} noValidate>
-                  <label htmlFor="flow-url">Endereço do produto</label>
-                  <input
-                    ref={flowUrlRef}
-                    id="flow-url"
-                    value={url}
-                    onChange={(event) => {
-                      setUrl(event.target.value);
-                      setUrlError("");
-                    }}
-                    placeholder="https://seuproduto.com.br"
-                    autoFocus
-                    autoComplete="url"
-                    inputMode="url"
-                    aria-invalid={Boolean(urlError)}
-                    aria-describedby={urlError ? flowUrlErrorId : undefined}
-                  />
-                  {urlError && (
-                    <small id={flowUrlErrorId} className="field-error" role="alert">
-                      {urlError}
-                    </small>
-                  )}
-                  <button className="button button-primary full" type="submit">
-                    Continuar <ViraIcon name="arrow-right" />
-                  </button>
-                </form>
-              </>
-            )}
-
-            {flow === "account" && (
-              <>
-                <Dialog.Title>Identificação demonstrativa.</Dialog.Title>
-                <Dialog.Description>
-                  Use um e-mail de teste. Nada será enviado ou armazenado neste MVP.
-                </Dialog.Description>
-                <form onSubmit={continueToPix} noValidate>
-                  <label htmlFor="flow-email">E-mail de teste</label>
-                  <input
-                    ref={emailRef}
-                    id="flow-email"
-                    type="email"
-                    value={email}
-                    onChange={(event) => {
-                      setEmail(event.target.value);
-                      setEmailError("");
-                    }}
-                    placeholder="teste@empresa.com"
-                    autoFocus
-                    autoComplete="email"
-                    aria-invalid={Boolean(emailError)}
-                    aria-describedby={emailError ? flowEmailErrorId : undefined}
-                  />
-                  {emailError && (
-                    <small id={flowEmailErrorId} className="field-error" role="alert">
-                      {emailError}
-                    </small>
-                  )}
-                  <div className="bid-summary">
-                    <span>Lance preparado</span>
-                    <strong className="tabular">{formattedBid}</strong>
-                  </div>
-                  <button className="button button-primary full" type="submit">
-                    Ver demonstração PIX <ViraIcon name="arrow-right" />
-                  </button>
-                </form>
-              </>
-            )}
-
-            {flow === "pix" && (
-              <>
-                <Dialog.Title>PIX demonstrativo.</Dialog.Title>
-                <Dialog.Description>
-                  O texto abaixo é inválido para pagamento e serve apenas para
-                  testar a interface.
-                </Dialog.Description>
-                <div className="pix-receipt">
-                  <span className="tabular">PIX</span>
-                  <div>
-                    <small>VALOR DA SIMULAÇÃO</small>
-                    <strong className="tabular">{formattedBid}</strong>
-                    <p>Nenhuma entrada será publicada.</p>
-                  </div>
+                <Dialog.Title>Revise sua simulação.</Dialog.Title>
+                <Dialog.Description>Este resumo não gera cobrança, publicação ou reserva de posição.</Dialog.Description>
+                <dl className="simulation-summary">
+                  <div><dt>Produto</dt><dd>{url}</dd></div>
+                  <div><dt>Lance simulado</dt><dd className="tabular">{formattedBid}</dd></div>
+                </dl>
+                <p className="simulation-note">A lista de lançamento serve apenas para avisar quando o ViraTopo estiver pronto para receber entradas reais.</p>
+                <div className="flow-actions">
+                  <button className="button button-secondary" type="button" onClick={editSimulation}>Ajustar simulação</button>
+                  <button ref={summaryContinueRef} className="button button-primary" type="button" onClick={continueToWaitlist} autoFocus>Ir para a lista <ViraIcon name="arrow-right" /></button>
                 </div>
-                <label htmlFor="pix-code">Código inválido para pagamento</label>
-                <textarea
-                  id="pix-code"
-                  className="pix-code"
-                  value={PIX_DEMO_CODE}
-                  readOnly
-                  rows={2}
-                />
-                <button
-                  className={`button button-secondary full ${copied ? "is-confirmed" : ""}`}
-                  type="button"
-                  onClick={copyPix}
-                  autoFocus
-                  disabled={copying}
-                  aria-describedby={copyError ? copyErrorId : undefined}
-                >
-                  {copying ? (
-                    "Copiando…"
-                  ) : copied ? (
-                    <>
-                      <ViraIcon name="check" /> Código copiado
-                    </>
-                  ) : (
-                    <>
-                      <ViraIcon name="copy" /> Copiar código
-                    </>
-                  )}
-                </button>
-                {copyError && (
-                  <small id={copyErrorId} className="field-error" role="alert">
-                    {copyError}
-                  </small>
-                )}
-                <button
-                  className="button button-primary full"
-                  type="button"
-                  onClick={registerDemoPayment}
-                >
-                  Simular confirmação <ViraIcon name="arrow-right" />
-                </button>
               </>
             )}
 
-            <Dialog.CloseTrigger className="icon-close" aria-label="Fechar">
-              <ViraIcon name="x" />
-            </Dialog.CloseTrigger>
+            {flow === "waitlist" && waitlistStatus !== "success" && (
+              <>
+                <Dialog.Title>Entre na lista de lançamento.</Dialog.Title>
+                <Dialog.Description>Enviaremos apenas avisos sobre o lançamento e esta simulação.</Dialog.Description>
+                <form className="waitlist-form" onSubmit={submitWaitlist} noValidate aria-busy={waitlistStatus === "loading"}>
+                  <div className="waitlist-field">
+                    <label htmlFor="flow-email">Seu e-mail</label>
+                    <input
+                      ref={emailRef}
+                      id="flow-email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+                        setEmailError("");
+                        setWaitlistStatus("idle");
+                      }}
+                      placeholder="voce@empresa.com"
+                      autoFocus
+                      autoComplete="email"
+                      inputMode="email"
+                      aria-invalid={Boolean(emailError)}
+                      aria-describedby={emailError ? flowEmailErrorId : undefined}
+                      disabled={waitlistStatus === "loading"}
+                    />
+                    {emailError && <small id={flowEmailErrorId} className="field-error" role="alert">{emailError}</small>}
+                  </div>
+
+                  <div className="consent-field">
+                    <label className="consent-check" htmlFor="waitlist-consent">
+                      <input
+                        ref={consentRef}
+                        id="waitlist-consent"
+                        type="checkbox"
+                        checked={consent}
+                        onChange={(event) => {
+                          setConsent(event.target.checked);
+                          setConsentError("");
+                          setWaitlistStatus("idle");
+                        }}
+                        aria-invalid={Boolean(consentError)}
+                        aria-describedby={consentError ? flowConsentErrorId : undefined}
+                        disabled={waitlistStatus === "loading"}
+                      />
+                      <span>Quero receber e-mails sobre o lançamento e esta simulação. Posso cancelar a qualquer momento.</span>
+                    </label>
+                    {consentError && <small id={flowConsentErrorId} className="field-error" role="alert">{consentError}</small>}
+                    <small className="consent-note">Uso dos dados conforme a <Link href="/privacidade">Política de Privacidade</Link>.</small>
+                  </div>
+
+                  <div className="waitlist-honeypot" aria-hidden="true">
+                    <label htmlFor="waitlist-website">Não preencha este campo</label>
+                    <input id="waitlist-website" name="website" type="text" value={website} onChange={(event) => setWebsite(event.target.value)} autoComplete="off" tabIndex={-1} />
+                  </div>
+
+                  {(waitlistStatus === "error" || waitlistStatus === "unavailable") && (
+                    <div ref={waitlistFeedbackRef} id={waitlistFeedbackId} className="waitlist-feedback" data-kind={waitlistStatus} role="alert" tabIndex={-1}>
+                      <strong>{waitlistStatus === "unavailable" ? "Lista temporariamente indisponível." : "Cadastro não confirmado."}</strong>
+                      <p>{waitlistStatus === "unavailable" ? "Nada foi enviado. Tente novamente mais tarde." : "Nada foi salvo. Confira os dados e tente novamente."}</p>
+                    </div>
+                  )}
+
+                  <div className="flow-actions">
+                    <button className="button button-secondary" type="button" onClick={returnToSummary} disabled={waitlistStatus === "loading"}>Voltar</button>
+                    <button className="button button-primary" type="submit" disabled={waitlistStatus === "loading"}>
+                      {waitlistStatus === "loading" ? "Enviando…" : waitlistStatus === "error" || waitlistStatus === "unavailable" ? "Tentar novamente" : "Entrar na lista"}
+                      {waitlistStatus !== "loading" && <ViraIcon name="arrow-right" />}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {flow === "waitlist" && waitlistStatus === "success" && (
+              <div ref={waitlistFeedbackRef} id={waitlistFeedbackId} className="waitlist-success" role="status" tabIndex={-1}>
+                <span className="success-mark" aria-hidden="true"><ViraIcon name="check" size={22} /></span>
+                <Dialog.Title>Solicitação recebida.</Dialog.Title>
+                <Dialog.Description>Recebemos sua solicitação; se elegível, você receberá avisos de lançamento no e-mail informado. Nenhuma cobrança ou posição foi criada.</Dialog.Description>
+                <button className="button button-primary full" type="button" onClick={finishWaitlist}>Voltar ao quadro</button>
+              </div>
+            )}
+
+            <Dialog.CloseTrigger className="icon-close" aria-label="Fechar"><ViraIcon name="x" /></Dialog.CloseTrigger>
           </Dialog.Content>
         </Dialog.Positioner>
       </Dialog.Root>

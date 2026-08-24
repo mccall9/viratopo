@@ -17,19 +17,40 @@ test("o fundo mantém o grid de quadrados espaçados e visível", async () => {
   assert.match(globals, /stroke-opacity='\.065'/);
 });
 
-test("o hero começa sem faixa redundante e mantém o aviso causal", async () => {
+test("o hero começa sem faixa redundante e declara o estado do simulador", async () => {
   const home = await readFile("src/components/home-arena.tsx", "utf8");
   assert.doesNotMatch(home, /className="season-rail"|Temporada sem entradas/);
-  assert.match(home, /className="inline-notice"/);
-  assert.match(home, /Nenhuma cobrança ou entrada real foi criada/);
+  assert.match(home, /A simulação não cobra, publica ou reserva uma posição/);
+  assert.match(home, /Nenhuma cobrança ou posição foi criada/);
+  assert.match(home, /Recebemos sua solicitação; se elegível/);
+  assert.doesNotMatch(home, /Você entrou na lista/);
 });
 
-test("a hero usa regras reais e uma demonstração inequivocamente inválida", async () => {
+test("a hero usa regras reais e termina em pré-cadastro verificável", async () => {
   const home = await readFile("src/components/home-arena.tsx", "utf8");
   assert.match(home, /className="hero-radar"/);
   assert.match(home, /className="hero-console"/);
-  assert.match(home, /DEMONSTRACAO-VIRATOPO-SEM-COBRANCA/);
-  assert.match(home, /Preparar entrada/);
-  assert.doesNotMatch(home, /000201010212/);
-  assert.doesNotMatch(home, /Entrar no ranking/);
+  assert.match(home, /Simular meu lance/);
+  assert.match(home, /fetch\("\/api\/waitlist"/);
+  assert.match(home, /Lista temporariamente indisponível/);
+  assert.doesNotMatch(home, /DEMONSTRACAO|000201010212|Confirmar pagamento/);
+});
+
+test("os estados preenchidos usam a fonte pública sem produtos fictícios", async () => {
+  const page = await readFile("src/app/page.tsx", "utf8");
+  const ranking = await readFile("src/app/ranking/page.tsx", "utf8");
+  assert.match(page, /getPublicRanking/);
+  assert.match(ranking, /getPublicRanking/);
+  assert.doesNotMatch(`${page}\n${ranking}`, /Runnext|Pedropaula|Rankinho|Talkbud/);
+});
+
+test("estados sem fonte pronta não anunciam o primeiro lugar como vazio ou livre", async () => {
+  const home = await readFile("src/components/home-arena.tsx", "utf8");
+  const ranking = await readFile("src/app/ranking/page.tsx", "utf8");
+  const share = await readFile("src/components/share-ranking.tsx", "utf8");
+  assert.match(home, /isReadyEmpty = ranking\.state === "ready"/);
+  assert.match(ranking, /isReadyEmpty = ranking\.state === "ready"/);
+  assert.match(share, /state === "ready"/);
+  assert.doesNotMatch(`${home}\n${ranking}`, /isReadyEmpty \? "#1"/);
+  assert.doesNotMatch(share, /#1 do ViraTopo ainda está vazio/);
 });

@@ -1,8 +1,12 @@
 # ViraTopo
 
-MVP de um ranking competitivo para produtos digitais brasileiros. Um produto sobe ao fazer o maior lance confirmado no ciclo atual.
+Beta de um ranking público para produtos brasileiros. Cada temporada dura 24 horas; produtos verificados são ordenados pelo maior lance confirmado e, em caso de empate, pela confirmação mais antiga.
 
-## Rodar localmente
+O repositório não contém produtos, métricas ou pagamentos fictícios. Sem Supabase configurado, a interface permanece em pré-lançamento e informa que a fonte de dados está desconectada.
+
+## Desenvolvimento local
+
+Requisitos: Node.js 20+ e npm.
 
 ```bash
 npm install
@@ -11,27 +15,50 @@ npm run dev
 
 Abra `http://localhost:3000`.
 
-O MVP abre com dados realistas e um checkout PIX demonstrativo, portanto pode ser apresentado sem chaves externas. O formulário pede login local para espelhar o fluxo de criação de conta; nenhum pagamento é cobrado.
+Comandos de validação:
 
-## Preparar Supabase
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+## Supabase
 
 1. Crie um projeto no Supabase.
 2. Execute [`supabase/schema.sql`](supabase/schema.sql) no SQL Editor.
-3. Copie `.env.example` para `.env.local` e preencha as credenciais públicas.
-4. Conecte a interface de pagamento ao provedor PIX escolhido antes de qualquer uso comercial.
+3. Copie `.env.example` para `.env.local`.
+4. Configure `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` para a leitura da RPC pública sanitizada.
+5. Configure `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` somente no servidor para o pré-cadastro.
+6. Defina `LEGAL_CONTROLLER_NAME`, `LEGAL_CONTACT_EMAIL` e gere um `WAITLIST_RATE_LIMIT_SECRET` aleatório com pelo menos 32 caracteres antes de persistir qualquer dado pessoal.
 
-O schema inclui autenticação por e-mail, produtos, lances, ciclos de ranking e políticas de acesso por proprietário.
+O ranking público lê apenas `get_public_ranking`. Referências do provedor, inscrições de pré-lançamento, fingerprints HMAC de limite e eventos brutos ficam no schema privado e não possuem leitura anônima. Um e-mail existente não é sobrescrito nem reativado por novas submissões.
+
+## Estado dos pagamentos
+
+Pagamentos reais estão desativados. O fluxo atual simula o valor, explica as regras e, quando a infraestrutura privada está configurada, registra interesse no lançamento. Ele não cria QR Code, não aceita uma confirmação do navegador e não reserva posição.
+
+Antes de ativar Mercado Pago em produção, ainda é obrigatório:
+
+- criar a order no servidor com chave de idempotência;
+- manter o Access Token somente no servidor;
+- validar a assinatura do webhook;
+- consultar o recurso no provedor antes de confirmar o lance;
+- testar expiração, repetição de eventos, falha, estorno e reembolso;
+- publicar responsável, contato e política de retenção.
 
 ## Deploy na Vercel
 
-1. Envie este repositório para o GitHub.
-2. Importe-o na Vercel.
-3. Cadastre as duas variáveis `NEXT_PUBLIC_SUPABASE_*` do `.env.example`.
-4. Publique.
+O projeto já é compatível com Vercel. Cadastre as variáveis do `.env.example` nos ambientes corretos, execute as validações acima e publique. Nunca adicione `SUPABASE_SERVICE_ROLE_KEY` ou futuras credenciais de pagamento com prefixo `NEXT_PUBLIC_`.
 
-## Regras de produto
+## Regras resumidas
 
-- Cada ciclo dura 24 horas.
-- Apenas lances PIX confirmados entram no ranking.
-- Um valor maior assume a posição; em empate, ganha a confirmação mais antiga.
-- Exibições e cliques são públicos para tornar o ranking auditável.
+- temporada de 24 horas;
+- lance declarado entre R$ 1 e R$ 9.999;
+- um produto por posição;
+- somente produto verificado e lance confirmado entram no quadro;
+- maior valor vence; empate favorece a confirmação mais antiga;
+- métricas ausentes aparecem como indisponíveis, não como zero inventado;
+- visibilidade não garante cliques, vendas ou conversão.
+
+As condições completas estão em `/termos` e a metodologia de medição em `/analytics`.

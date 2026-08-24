@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const SITE_NAME = "ViraTopo";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://viratopo.vercel.app").replace(/\/$/, "");
-export const SITE_DESCRIPTION = "Conheça o ViraTopo, um MVP em pré-lançamento de ranking público para produtos brasileiros. O checkout PIX atual é demonstrativo e não realiza cobranças.";
+export const SITE_DESCRIPTION = "Dispute visibilidade em um ranking público de produtos brasileiros, ordenado apenas por lances confirmados. O ViraTopo está em pré-lançamento e ainda não realiza cobranças.";
 
 export const SOCIAL_IMAGE = {
   url: `${SITE_URL}/opengraph-image`,
