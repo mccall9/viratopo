@@ -35,6 +35,17 @@ test("a hero usa regras reais e termina em pré-cadastro verificável", async ()
   assert.match(home, /Lista temporariamente indisponível/);
   assert.match(home, /response\.status === 429/);
   assert.match(home, /Limite de tentativas atingido/);
+  assert.match(home, /setRetryAt\(Date\.now\(\) \+ cooldownSeconds \* 1_000\)/);
+  assert.match(home, /window\.setInterval\(updateCooldown, 1_000\)/);
+  assert.match(home, /remainingMs <= 0[\s\S]*?setWaitlistStatus\("idle"\)/);
+  assert.match(
+    home,
+    /const openSummary = \(\) => \{[\s\S]*?setWaitlistStatus\(\(current\) => current === "rate-limited" \? current : "idle"\);[\s\S]*?setFlow\("summary"\)/,
+  );
+  assert.match(
+    home,
+    /const returnToSummary = \(\) => \{[\s\S]*?setWaitlistStatus\(\(current\) => current === "rate-limited" \? current : "idle"\);[\s\S]*?setFlow\("summary"\)/,
+  );
   assert.doesNotMatch(home, /DEMONSTRACAO|000201010212|Confirmar pagamento/);
 });
 

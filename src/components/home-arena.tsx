@@ -55,12 +55,32 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
   const [website, setWebsite] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<WaitlistStatus>("idle");
   const [retryAfterMinutes, setRetryAfterMinutes] = useState(60);
+  const [retryAt, setRetryAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (["success", "error", "unavailable", "rate-limited"].includes(waitlistStatus)) {
       waitlistFeedbackRef.current?.focus();
     }
   }, [waitlistStatus]);
+
+  useEffect(() => {
+    if (waitlistStatus !== "rate-limited" || retryAt === null) return;
+
+    const updateCooldown = () => {
+      const remainingMs = retryAt - Date.now();
+      if (remainingMs <= 0) {
+        setRetryAt(null);
+        setRetryAfterMinutes(0);
+        setWaitlistStatus("idle");
+        return;
+      }
+      setRetryAfterMinutes(Math.max(1, Math.ceil(remainingMs / 60_000)));
+    };
+
+    updateCooldown();
+    const interval = window.setInterval(updateCooldown, 1_000);
+    return () => window.clearInterval(interval);
+  }, [retryAt, waitlistStatus]);
 
   const formattedBid = `R$ ${bid.toLocaleString("pt-BR")}`;
 
@@ -79,7 +99,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
     setConsent(false);
     setConsentError("");
     setWebsite("");
-    setWaitlistStatus("idle");
+    setWaitlistStatus((current) => current === "rate-limited" ? current : "idle");
     setFlow("summary");
   };
 
@@ -111,7 +131,7 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
   const returnToSummary = () => {
     setEmailError("");
     setConsentError("");
-    setWaitlistStatus("idle");
+    setWaitlistStatus((current) => current === "rate-limited" ? current : "idle");
     setFlow("summary");
     requestAnimationFrame(() => summaryContinueRef.current?.focus());
   };
@@ -169,9 +189,11 @@ export function HomeArena({ ranking }: { ranking: PublicRankingResult }) {
         setWaitlistStatus("success");
       } else if (response.status === 429) {
         const retryAfterSeconds = Number(response.headers.get("retry-after"));
-        setRetryAfterMinutes(Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
-          ? Math.max(1, Math.ceil(retryAfterSeconds / 60))
-          : 60);
+        const cooldownSeconds = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+          ? retryAfterSeconds
+          : 3_600;
+        setRetryAt(Date.now() + cooldownSeconds * 1_000);
+        setRetryAfterMinutes(Math.max(1, Math.ceil(cooldownSeconds / 60)));
         setWaitlistStatus("rate-limited");
       } else if (response.status === 503) {
         setWaitlistStatus("unavailable");
