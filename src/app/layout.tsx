@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
 import "@mantine/core/styles.css";
-import "./globals.css";
-import "./arena-pages.css";
-import "./sabia-theme.css";
-import "./ranking-preview.css";
-import "./glass-nav.css";
-import "./policy-pages.css";
-import "./lance-ui.css";
-import "./font-swap.css";
-import "./standard-pages.css";
-import "./dino-grid.css";
-import "./market-system.css";
-import "./dino-club.css";
+import "./viratopo.css";
 import { ViraTopoProvider } from "@/components/mantine-provider";
 
 export const metadata: Metadata = {
