@@ -37,3 +37,6 @@ button,.button,.lance-submit.mantine-Button-root{transition:transform 140ms var(
 
 /* Monetary values must never shrink or clip between the bid controls. */
 .hero-bid>div{flex:0 0 auto;white-space:nowrap}.hero-bid strong,.bid-row strong,.slot-bid b{display:block;min-width:max-content;line-height:1.25;white-space:nowrap;overflow:visible}.hero-bid strong{padding:1px 0}
+
+/* Reserve a full cell for the bid amount instead of squeezing the currency. */
+.hero-bid{gap:14px;min-height:56px;padding:8px 10px 8px 15px}.hero-bid strong{min-width:76px;height:38px;padding:0;display:grid;place-items:center;line-height:1.25}
