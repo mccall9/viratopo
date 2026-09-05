@@ -36,6 +36,12 @@ O ranking público lê apenas `get_public_ranking`. Referências do provedor, in
 
 ## Estado dos pagamentos
 
+O transporte Node do Mercado Pago está em `src/lib/mercado-pago.mjs`, com criação PIX pela Orders API, consulta por ID, prazo de 30 minutos, chave de idempotência fornecida pela tentativa persistida e validação HMAC da assinatura de notificações. Os testes usam respostas controladas; nenhuma cobrança foi enviada ao provedor.
+
+Esse módulo ainda não está ligado a uma rota pública nem ao checkout. Antes de conectá-lo, persistir uma tentativa imutável, autorizar o dono do produto e conferir o valor retornado pelo provedor contra o valor devido no banco. A assinatura autentica o ID notificado, não o status no corpo do webhook. A consulta deve também validar conta recebedora, referência externa e estado final. Eventos fora da janela de cinco minutos exigirão reconciliação pelo servidor. Nunca recriar uma chave após timeout: a primeira chamada pode ter criado a order.
+
+Documentação do contrato: [PIX via Orders API](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/pix) e [notificações de orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications).
+
 Pagamentos reais estão desativados. O fluxo atual simula o valor, explica as regras e, quando a infraestrutura privada está configurada, registra interesse no lançamento. Ele não cria QR Code, não aceita uma confirmação do navegador e não reserva posição.
 
 Antes de ativar Mercado Pago em produção, ainda é obrigatório:
